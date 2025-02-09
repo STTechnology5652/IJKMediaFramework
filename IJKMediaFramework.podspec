@@ -1,7 +1,7 @@
 Pod::Spec.new do |spec|
 
   spec.name         = "IJKMediaFramework"
-  spec.version      = "0.0.1"
+  spec.version      = "0.0.3"
   spec.summary      = "IJKMediaFramework 说明."
   spec.description      = <<-DESC
   IJKMediaFramework long description of the pod here.
@@ -12,18 +12,21 @@ Pod::Spec.new do |spec|
   spec.author             = { "defualt_author" => "defualt_email" }
   spec.ios.deployment_target = '9.0'
 
+  # 添加这行来指定使用动态框架
+  spec.static_framework = false
+
   spec.source       = { :git => "https://github.com/STTechnology5652/IJKMediaFramework.git", :tag => "#{spec.version}" }
 
-
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
-  spec.source_files = 'IJKMediaFramework/{Public,Private}/**/*.{h,m,mm,c,cpp,swift}'
+#  spec.source_files = 'IJKMediaFramework/**/*'
   # spec.exclude_files = "IJKMediaFramework/Exclude" #排除文件
 
-  spec.project_header_files = 'IJKMediaFramework/Private/**/*.{h}'
-  spec.public_header_files = 'IJKMediaFramework/Public/**/*.h' #此处放置组件的对外暴漏的头文件
+#  spec.project_header_files = ''
+#  spec.public_header_files = 'IJKMediaFramework/Public/**/*.h'
 
+  
   # ――― binary framework/lib ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
-  spec.vendored_frameworks = 'IJKMediaFramework/Private/**/*.framework'
+  spec.vendored_frameworks = 'IJKMediaFramework/Public/IJKMediaFramework.framework'
   #spec.vendored_libraries = 'IJKMediaFramework/Private/**/*.a'
 
   # ――― Resources ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
@@ -34,11 +37,9 @@ Pod::Spec.new do |spec|
   #  }
 
 
-  # ――― Project Linking ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
-  # spec.framework  = "SomeFramework"
-  # spec.frameworks = "SomeFramework", "AnotherFramework"
-  # spec.library   = "iconv"
-  # spec.libraries = "iconv", "xml2"
+  # ――― Project Linking ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+  spec.frameworks = "AVFoundation", "CoreGraphics", "CoreMedia", "CoreVideo", "MediaPlayer", "MobileCoreServices", "OpenGLES", "QuartzCore", "VideoToolbox", "AudioToolbox", "CoreAudio"
+  spec.libraries = "bz2", "z", "stdc++"
 
 
   # ――― Project Settings ――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
@@ -59,20 +60,57 @@ Pod::Spec.new do |spec|
 #     end
 
 spec.prepare_command  =  <<-CMD
+ set -x  # 启用详细日志输出
+ 
  rm -rf ./UnzipDir
  mkdir -pv ./UnzipDir
  
  rm -rf ./IJKMediaFramework/Public/IJKMediaFramework
- mkdir ./IJKMediaFramework/Public/IJKMediaFramework
+ mkdir -p ./IJKMediaFramework/Public/IJKMediaFramework
  
+ echo "Looking for zip file..."
+ ls -l ./*.zip
+ 
+ # 添加验证步骤
+ if [ ! -f ./*.zip ]; then
+    echo "Error: Framework zip file not found!"
+    exit 1
+ fi
+ 
+ echo "Extracting framework..."
  tar -xzvf ./*.zip -C  ./UnzipDir/
  
- rm -rf ./IJKMediaFramework/Private/Vendor/*
-
- cp -r ./UnzipDir/*.framework/Headers/ ./IJKMediaFramework/Public/IJKMediaFramework/
- mv ./UnzipDir/* ./IJKMediaFramework/Private/Vendor/
+ echo "Checking extracted contents..."
+ ls -R ./UnzipDir/
+ 
+ # 验证解压是否成功
+ if [ ! -d ./UnzipDir/*.framework ]; then
+    echo "Error: Framework not found in unzipped contents!"
+    exit 1
+ fi
+ 
+ 
+ # 确保 Headers 目录存在
+ if [ ! -d ./UnzipDir/*.framework/Headers ]; then
+    echo "Error: Headers directory not found in framework!"
+    exit 1
+ fi
+ 
+ echo "Moving framework..."
+ mv -v ./UnzipDir/* ./IJKMediaFramework/Public/
+ 
+ echo "Verifying file structure..."
+ ls -R ./IJKMediaFramework/Public/
+ 
+ # 验证文件是否正确复制
+ if [ ! -f ./IJKMediaFramework/Public/IJKMediaFramework.framework/Headers/IJKAVMoviePlayerController.h ]; then
+    echo "Error: IJKAVMoviePlayerController.h not found in public headers!"
+    exit 1
+ fi
+ 
  rm -rf ./UnzipDir
-
- CMD
+ 
+ echo "Setup completed successfully"
+CMD
 
 end
