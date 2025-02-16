@@ -37,8 +37,11 @@ Pod::Spec.new do |spec|
   #  }
 
 
-  # ――― Project Linking ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+  # ――― Project Linking ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
+  # spec.framework  = "SomeFramework"
   spec.frameworks = "AVFoundation", "CoreGraphics", "CoreMedia", "CoreVideo", "MediaPlayer", "MobileCoreServices", "OpenGLES", "QuartzCore", "VideoToolbox", "AudioToolbox", "CoreAudio"
+  spec.libraries = "bz2", "z", "stdc++"
+  # spec.library   = "iconv"
   spec.libraries = "bz2", "z", "stdc++"
 
 
